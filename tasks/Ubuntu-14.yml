@@ -40,4 +40,4 @@
       - local_policy.jar
       - US_export_policy.jar
 
-  when: "not {{ jce_check.stdout }}"
+  when: not jce_check.stdout
