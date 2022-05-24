@@ -1,0 +1,43 @@
+---
+- name: Check if JCE is already installed
+  shell: "{{ jce_java_home }}/bin/jrunscript -e 'print (javax.crypto.Cipher.getMaxAllowedKeyLength(\"RC5\") >= 256);'"
+  changed_when: false
+  ignore_errors: true
+  register: jce_check
+
+- block:
+  - name: Download JCE
+    get_url:
+      url:     "{{ jce_src }}"
+      dest:    /tmp
+      headers: 'Cookie:oraclelicense=accept-securebackup-cookie'
+
+  - name: Make sure unzip is installed
+    package:
+      name: unzip
+      state: present
+
+  - name: Make sure tmp directory exists
+    file:
+      path: /tmp/{{ jce_src | basename | splitext | first }}
+      state: directory
+      mode: 0755
+
+  - name: Unzip JCE
+    command: "unzip -o -j /tmp/{{ jce_src | basename }} -d /tmp/{{ jce_src | basename | splitext | first }}"
+    args:
+      creates: "/tmp/{{ jce_src | basename | splitext | first }}/README.txt"
+
+  - name: Install JCE policies
+    become: true
+    copy:
+      src: "/tmp/{{ jce_src | basename | splitext | first }}/{{ item }}"
+      dest: "{{ jce_java_home }}/jre/lib/security/{{ item }}"
+      backup: yes
+      remote_src: True
+      mode: 0664
+    with_items:
+      - local_policy.jar
+      - US_export_policy.jar
+
+  when: not jce_check.stdout

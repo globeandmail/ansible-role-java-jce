@@ -1,10 +1,14 @@
 ---
-- name: check for supported operating system on target
-  fail:
-    msg: "the operating system of the target machine ({{ inventory_hostname }}) is not currently supported."
-  when: ( ansible_distribution != "Ubuntu" and ansible_distribution_major_version not in [14, 16] )
+#- name: check for supported operating system on target
+#  fail:
+#    msg: "the operating system of the target machine ({{ inventory_hostname }}) is not currently supported."
+#  when: ( ansible_distribution != "Ubuntu" and ansible_distribution_major_version not in [14, 16] )
 
+
+#- name: include distro specific tasks
+#  include: "{{ ansible_distribution }}-{{ ansible_distribution_major_version }}.yml"
+#  when: jce_java_home is defined and jce_src is defined
 
 - name: include distro specific tasks
-  include: "{{ ansible_distribution }}-{{ ansible_distribution_major_version }}.yml"
+  include: "{{ ansible_distribution|lower }}.yml"
   when: jce_java_home is defined and jce_src is defined
